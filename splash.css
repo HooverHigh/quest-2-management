@@ -1,0 +1,47 @@
+* {
+    box-sizing: border-box;
+    font-family: Hubot-Sans, "Open Sans", sans-serif;
+}
+
+html,
+body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    /*background-color: #232b2b;*/
+    background-color: rgb(48, 48, 48);
+    user-select: none;
+    overflow: hidden;
+    color: white;
+}
+
+.btn {
+    background-color: #DB3DDB;
+    /* Green */
+    border: none;
+    color: white;
+    padding: 13px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+}
+
+.btn.br-2 {
+    border-radius: 2px;
+}
+
+.btn.br-4 {
+    border-radius: 4px;
+}
+
+.btn.br-8 {
+    border-radius: 8px;
+}
+
+.btn.br-12 {
+    border-radius: 12px;
+}
