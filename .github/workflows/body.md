@@ -2,4 +2,4 @@
 
 ## About This Update:
 
-This update includes some bug fixes and new features.
+This update includes some bug fixes and a new icon for battery charging.
