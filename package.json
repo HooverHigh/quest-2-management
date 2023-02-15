@@ -1,6 +1,6 @@
 {
     "name": "quest-2-management",
-    "version": "2.0.3",
+    "version": "2.0.4",
     "description": "An app to manage quest2 devices.",
     "main": "src/main/index.js",
     "scripts": {
