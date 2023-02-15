@@ -129,7 +129,9 @@ if (DiscordRPC == true) {
 	};
 };
 
-function DownloadADB() {
+var dluseragent = `Q2M v:${launcherversion}; platform:${os.platform()};`;
+
+function DownloadLIBS() {
 	const url = 'https://dl.google.com/android/repository/platform-tools-latest-';
 	console.log(`Platform: ${os.platform()}`);
 	let downloadUrl;
@@ -166,7 +168,7 @@ function DownloadADB() {
 		method: 'GET',
 		uri: downloadUrl,
 		headers: {
-			'User-Agent': `clauncherbproto; launcherVerion: 1.0.0; claunchDOTNET 3.1; WindowsLaunch: 10;`
+			'User-Agent': `${dluseragent}`
 		}
 	});
 
@@ -237,6 +239,7 @@ function DownloadADB() {
 				document.getElementById("DLMODAL-title").innerHTML = "Extracted ADB Tools";
 				progressText.innerHTML = 'Extracted ADB Tools!';
 				setTimeout(async function() {
+					let ver = "v1.25";
 					let downloadUrl = `https://github.com/Genymobile/scrcpy/releases/download/${ver}/scrcpy-${os.platform()}-${ver}.zip`;
 					console.log(`Platform: ${os.platform()}`);
 					console.log(`DL Url: ${downloadUrl}`);
@@ -252,7 +255,7 @@ function DownloadADB() {
 						method: 'GET',
 						uri: downloadUrl,
 						headers: {
-							'User-Agent': `clauncherbproto; launcherVerion: 1.0.0; claunchDOTNET 3.1; WindowsLaunch: 10;`
+							'User-Agent': `${dluseragent}`
 						}
 					});
 
@@ -285,7 +288,7 @@ function DownloadADB() {
 						progressText.innerHTML = 'Download Complete!';
 						document.getElementById("DLMODAL-title").innerHTML = "Downloaded SCRCPY";
 						setTimeout(async function() {
-							progressText.innerHTML = 'Extracting SCRCPY Tools...';
+							progressText.innerHTML = 'Extracting SCRCPY...';
 							const extract = onezip.extract(path.join(rootpath, `adb-tools-platform-${os.platform()}.zip`), path.join(rootpath, 'lib'));
 
 							extract.on('file', (name) => {
@@ -296,7 +299,7 @@ function DownloadADB() {
 
 							extract.on('start', (percent) => {
 								console.log('extracting started');
-								document.getElementById("DLMODAL-title").innerHTML = "Extracting ADB Tools";
+								document.getElementById("DLMODAL-title").innerHTML = "Extracting SCRCPY";
 							});
 
 							extract.on('progress', (percent) => {
@@ -332,7 +335,7 @@ function DownloadADB() {
 						if (err) {
 							//Create error log and inform user an error occured
 							let data = JSON.stringify({
-								"Ereason": `${error}`,
+								"Ereason": `${err}`,
 								"Date": `${currentMonth}/${currentDay}/${currentYear}`,
 								"Platform": `${os.platform()}`,
 								"section": `ADB`
@@ -348,7 +351,7 @@ function DownloadADB() {
 						if (err) {
 							//Create error log and inform user an error occured
 							let data = JSON.stringify({
-								"Ereason": `${error}`,
+								"Ereason": `${err}`,
 								"Date": `${currentMonth}/${currentDay}/${currentYear}`,
 								"Platform": `${os.platform()}`,
 								"section": `SCRCPY`
@@ -377,80 +380,196 @@ function streamScreen(eye) {
 	Q2MADB.showScreen(eye);
 }
 
-async function installAPK() {
-	var localapk = await dialog.showOpenDialog({
-		properties: ['openFile'],
-		filters: [{
-				name: 'Android App Package',
-				extensions: ['apk']
-			},
-			{
-				name: 'All Files',
-				extensions: ['*']
+async function installAPK(mode = "", url = "") {
+	var localapk, apkpath, apkurl;
+	if (typeof mode != "" || typeof mode != "null" && mode == "online" && typeof url != "") {
+		apkurl = url;
+		console.log(`Platform: ${os.platform()}`);
+		console.log(`DL Url: ${apkurl}`);
+		document.getElementById("DLMODAL-title").innerHTML = "Downloading APK...";
+		progressText.innerHTML = `Downloading APK from url: ${apkurl}`;
+		progbardiv.style.display = "block";
+
+		//Save variable to know progress
+		var received_bytes = 0;
+		var total_bytes = 0;
+
+		var req = request({
+			method: 'GET',
+			uri: apkurl,
+			headers: {
+				'User-Agent': `${dluseragent}`
 			}
-		]
-	});
-	if (localapk.canceled != true) {
-		console.log(localapk.filePaths[0]);
-		var progressText = document.getElementById("progress-text");
-		var denybtn = document.getElementById("DenyDLGModalBtn");
-		var acceptbtn = document.getElementById("AcceptDLGModalBtn");
-
-		document.getElementById("DLMODAL-title").innerHTML = "Install APK";
-		progressText.style.display = "block";
-		denybtn.style.display = "block";
-		acceptbtn.style.display = "block";
-		progressText.innerHTML = "Are you sure you want to install this APK?<br>It might put your device at risk, only install APK's from trusted sources.";
-
-		acceptbtn.innerHTML = '<i class="fa fa-download"></i> Yes, Install';
-
-		$("#DLGMODAL").modal({
-			backdrop: 'static',
-			keyboard: false
 		});
-		$('#DLGMODAL').modal('show');
 
-		acceptbtn.addEventListener("click", async function eventHandler() {
-			document.getElementById("DLMODAL-title").innerHTML = "Installing APK";
-			progressText.innerHTML = `Installing ${localapk.filePaths[0]}`;
-			denybtn.style.display = "none";
-			acceptbtn.style.display = "none";
+		var out = fs.createWriteStream(path.join(rootpath, `dl`, `online-apk-${currentMonth}-${currentDay}-${currentYear}.apk`));
+		req.pipe(out);
+
+		req.on('response', function(data) {
+			//Change the total bytes value to get progress later
+			//console.log(data);
+			total_bytes = parseInt(data.headers['content-length']);
+		});
+
+		req.on('data', function(chunk) {
+			//Update the received bytes
+			received_bytes += chunk.length;
+
+			var percentage = (received_bytes * 100) / total_bytes;
+			console.log(percentage.toFixed(2).split('.')[0].trim() + "% | " + received_bytes + " bytes out of " + total_bytes + " bytes.");
+			//console.log(percentage.toFixed(2).split('.')[0].trim());
+
+			progbar.innerHTML = `${percentage.toFixed(2).split('.')[0].trim()}%`;
+			progbar.style = `width: ${percentage}%;`;
+			downloadProgressText.innerHTML = `${percentage.toFixed(2).split('.')[0].trim()}%`;
+			//progbar.innerHTML = `${percentage.toFixed(2).split('.')[0].trim()}%`;
+		});
+
+		req.on('end', function() {
+			out.end();
+			console.log("Successfully downloaded SCRCPY!");
+			progressText.innerHTML = 'Download Complete!';
+			document.getElementById("DLMODAL-title").innerHTML = "Downloaded SCRCPY";
 			setTimeout(async function() {
-				try {
-					var resp = await Q2MADB.installApp(localapk.filePaths[0]);
-					console.log(resp);
-					if (resp == "Performing Streamed Install\r\nSuccess\r\n") {
-						document.getElementById("DLMODAL-title").innerHTML = "Installed APK";
-						progressText.innerHTML = `Successfully Installed ${localapk.filePaths[0]}`;
-						setTimeout(async function() {
-							$('#DLGMODAL').modal('hide');
-						}, 2000);
-					} else {
-						document.getElementById("DLMODAL-title").innerHTML = "Error durring install";
-						fs.writeFileSync(path.join(rootpath, "AOKINSTALLERROR.log"), resp);
-						progressText.innerHTML = `An error accured while install your APK, a log has been saved at ${path.join(rootpath, 'APKINSTALLERROR.log')}`;
-						setTimeout(async function() {
-							$('#DLGMODAL').modal('hide');
-						}, 2000);
-					}
-				} catch (e) {
-					document.getElementById("DLMODAL-title").innerHTML = "Error durring install";
-					fs.writeFileSync(path.join(rootpath, "AOKINSTALLERROR.log"), e.toString());
-					progressText.innerHTML = `An error accured while install your APK,<br>a log has been saved at ${path.join(rootpath, 'APKINSTALLERROR.log')}`;
-					setTimeout(async function() {
-						$('#DLGMODAL').modal('hide');
-					}, 5000);
-				};
-				this.removeEventListener('click', eventHandler);
-			}, 2000);
+				progressText.innerHTML = 'Extracting SCRCPY...';
+				const extract = onezip.extract(path.join(rootpath, `adb-tools-platform-${os.platform()}.zip`), path.join(rootpath, 'lib'));
+
+				extract.on('file', (name) => {
+					if (debug == true) {
+						console.log(name);
+					};
+				});
+
+				extract.on('start', (percent) => {
+					console.log('extracting started');
+					document.getElementById("DLMODAL-title").innerHTML = "Extracting SCRCPY";
+				});
+
+				extract.on('progress', (percent) => {
+					console.log(percent + '%');
+					progbar.style = `width: ${percent}%;`;
+					downloadProgressText.innerHTML = `${percent}%`;
+					progbar.innerHTML = `${percent}%`;
+				});
+
+				extract.on('error', (error) => {
+					console.error(error);
+					//Create error log and inform user an error occured
+					let data = JSON.stringify({
+						"Ereason": `${error}`,
+						"Date": `${currentMonth}/${currentDay}/${currentYear}`,
+						"Platform": `${os.platform()}`,
+						"section": `SCRCPY`
+					});
+					fs.writeFileSync(path.join(rootpath, 'SCRCPY-Extract-Error.json'), data);
+				});
+
+				extract.on('end', () => {
+					console.log('done extrating');
+					document.getElementById("DLMODAL-title").innerHTML = "Extracted SCRCPY";
+					progressText.innerHTML = 'Extracted SCRCPY!';
+				});
+			}, 3000);
 		});
-		denybtn.addEventListener("click", async function eventHandler() {
-			$('#DLGMODAL').modal('hide');
-			this.removeEventListener('click', eventHandler);
+		$('#DLGMODAL').modal('hide');
+
+		fs.unlink(path.join(rootpath, `adb-tools-platform-${os.platform()}.zip`), (err) => {
+			progbar.style.display = "none";
+			if (err) {
+				//Create error log and inform user an error occured
+				let data = JSON.stringify({
+					"Ereason": `${err}`,
+					"Date": `${currentMonth}/${currentDay}/${currentYear}`,
+					"Platform": `${os.platform()}`,
+					"section": `ADB`
+				});
+				fs.writeFileSync(path.join(rootpath, 'ADB-Tools-unlink-Error.json'), data);
+			};
+			console.log(`adb-tools-platform-${os.platform()}.zip was deleted`);
+			var dvcloop;
+			dvcloop = setInterval(dispinfo, 1000);
 		});
 	} else {
-		console.log("APK install canceled");
-	};
+		localapk = await dialog.showOpenDialog({
+			properties: ['openFile'],
+			filters: [{
+					name: 'Android App Package',
+					extensions: ['apk']
+				},
+				{
+					name: 'All Files',
+					extensions: ['*']
+				}
+			]
+		});
+		if (localapk.canceled != true) {
+			console.log(localapk.filePaths[0]);
+			apkpath = localapk.filePaths[0];
+		} else {
+			console.log("local APK install canceled");
+			return;
+		};
+	}
+	var progressText = document.getElementById("progress-text");
+	var denybtn = document.getElementById("DenyDLGModalBtn");
+	var acceptbtn = document.getElementById("AcceptDLGModalBtn");
+
+	document.getElementById("DLMODAL-title").innerHTML = "Install APK";
+	progressText.style.display = "block";
+	denybtn.style.display = "block";
+	acceptbtn.style.display = "block";
+	progressText.innerHTML = "Are you sure you want to install this APK?<br>It might put your device at risk, only install APK's from trusted sources.";
+
+	acceptbtn.innerHTML = '<i class="fa fa-download"></i> Yes, Install';
+
+	$("#DLGMODAL").modal({
+		backdrop: 'static',
+		keyboard: false
+	});
+	$('#DLGMODAL').modal('show');
+
+	acceptbtn.addEventListener("click", async function eventHandler() {
+		document.getElementById("DLMODAL-title").innerHTML = "Installing APK";
+		progressText.innerHTML = `Installing ${apkpath}`;
+		denybtn.style.display = "none";
+		acceptbtn.style.display = "none";
+		setTimeout(async function() {
+			try {
+				var resp = await Q2MADB.installApp(apkpath);
+				console.log(resp);
+				if (resp == "Performing Streamed Install\r\nSuccess\r\n") {
+					document.getElementById("DLMODAL-title").innerHTML = "Installed APK";
+					progressText.innerHTML = `Successfully Installed ${localapk.filePaths[0]}`;
+					setTimeout(async function() {
+						$('#DLGMODAL').modal('hide');
+					}, 2000);
+				} else {
+					document.getElementById("DLMODAL-title").innerHTML = "Error durring install";
+					fs.writeFileSync(path.join(rootpath, "AOKINSTALLERROR.log"), resp);
+					progressText.innerHTML = `An error accured while install your APK, a log has been saved at ${path.join(rootpath, 'APKINSTALLERROR.log')}`;
+					setTimeout(async function() {
+						$('#DLGMODAL').modal('hide');
+					}, 2000);
+				}
+			} catch (e) {
+				document.getElementById("DLMODAL-title").innerHTML = "Error durring install";
+				fs.writeFileSync(path.join(rootpath, "AOKINSTALLERROR.log"), e.toString());
+				progressText.innerHTML = `An error accured while install your APK,<br>a log has been saved at ${path.join(rootpath, 'APKINSTALLERROR.log')}`;
+				setTimeout(async function() {
+					$('#DLGMODAL').modal('hide');
+				}, 5000);
+			};
+			this.removeEventListener('click', eventHandler);
+		}, 2000);
+	});
+	denybtn.addEventListener("click", async function eventHandler() {
+		$('#DLGMODAL').modal('hide');
+		this.removeEventListener('click', eventHandler);
+	});
+}
+
+function EnrollMDM() {
+
 }
 
 function dispinfo() {
@@ -472,7 +591,7 @@ function dispinfo() {
 		storage: Q2MADB.getStorage(devices[0].id),
 		battery: Q2MADB.getBatteryInfo(devices[0].id)
 	};
-	if (debug == true & 0 === 1) {
+	if (debug == true) {
 		console.log("Device id:", device.id);
 		console.log("Device model:", device.model);
 		console.log("Device storage:", device.storage);
@@ -545,7 +664,7 @@ $(document).ready(function() {
 
 			acceptbtn.style.display = "block";
 			acceptbtn.addEventListener("click", e => {
-				DownloadADB();
+				DownloadLIBS();
 				acceptbtn.style.display = "none";
 			});
 		}
