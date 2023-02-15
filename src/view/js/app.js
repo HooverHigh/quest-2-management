@@ -5,25 +5,10 @@ const os = require('os');
 const onezip = require('onezip');
 const request = require('request');
 const log4js = require("log4js");
-const {
-	ipcMain,
-	ipcRenderer
-} = require('electron');
-const {
-	app,
-	BrowserWindow,
-	shell,
-	dialog
-} = require('@electron/remote');
-const {
-	execFile,
-	execFileSync,
-	exec,
-	spawn
-} = require('child_process');
-const {
-	downloadRelease
-} = require('@terascope/fetch-github-release');
+const { ipcMain, ipcRenderer } = require('electron');
+const { app, BrowserWindow, shell, dialog } = require('@electron/remote');
+const { execFile, execFileSync, exec, spawn } = require('child_process');
+const { downloadRelease } = require('@terascope/fetch-github-release');
 
 /* Info about app */
 var appdir = path.join(__dirname, "..", "..");
@@ -625,6 +610,14 @@ function dispinfo() {
 	//$("#storageused").html(`${device.storage.use} used`);
 	//$("#storageused").html(`Device storage is not accurate, please view it in your headsets settings.`);
 	$("#batperc").html(`${device.battery.level}%`);
+	$("#batperc-icon").css("height", `${device.battery.level}%`);
+	if (device.battery.level < 10) {
+	  document.getElementById("connectionstatusicon").classList = "battery-level alert";
+	} else if (device.battery.level > 10 && device.battery.level != 20) {
+    document.getElementById("connectionstatusicon").classList = "battery-level warn";
+  } else {
+    document.getElementById("connectionstatusicon").classList = "battery-level";
+  }
 	document.getElementById("connectionstatusicon").classList = "status online";
 	$("#connectionstatusicon").attr("title", "Connected");
 	$("#connectionstatusicon").attr("arira-label", "Connected");
