@@ -30,6 +30,7 @@
   <link rel="stylesheet" href="./css/status.css" type="text/css">
   <link rel="stylesheet" href="./css/scrollbar.css" type="text/css">
   <link rel="stylesheet" href="./css/style.css" type="text/css">
+  <link rel="stylesheet" href="./css/battery.css" type="text/css">
   <link rel='stylesheet' href='./css/loading.css' type='text/css'>
   <div class='loader'>
     <center>
@@ -146,7 +147,7 @@
             </form>
           </div>
           <div id="AppInfo" style="display: block; bottom: 11px; position: absolute;">
-            <legend class="mb-0">Appstore Info:</legend>
+            <legend class="mb-0">Application Info:</legend>
             <p id="lver" class="mb-0">Version: Unknown</p>
           </div>
         </fieldset>
@@ -189,6 +190,9 @@
                       <div class="d-flex">
                         <div class="mt-sm-0">
                           <h5 class="mb-0 text-white">Battery</h5>
+                          <div class="battery" style="display: none;">
+                            <div class="battery-level" style="height:100%;" id="batperc-icon"></div>
+                          </div>
                           <i class="fa-solid fa-battery-full fa-2xl"></i>
                         </div>
                         <div class="ms-auto">
