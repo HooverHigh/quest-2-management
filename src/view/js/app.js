@@ -381,13 +381,14 @@ function streamScreen(eye) {
 }
 
 async function installAPK(mode = "", url = "") {
-	var localapk, apkpath, apkurl;
+	var localapk, apkpath, apkurl, apkdlpath;
 	if (typeof mode != "" || typeof mode != "null" && mode == "online" && typeof url != "") {
 		apkurl = url;
 		console.log(`Platform: ${os.platform()}`);
 		console.log(`DL Url: ${apkurl}`);
 		document.getElementById("DLMODAL-title").innerHTML = "Downloading APK...";
 		progressText.innerHTML = `Downloading APK from url: ${apkurl}`;
+		apkdlpath = path.join(rootpath, `dl`, `online-apk-${currentMonth}-${currentDay}-${currentYear}.apk`);
 		progbardiv.style.display = "block";
 
 		//Save variable to know progress
@@ -402,7 +403,7 @@ async function installAPK(mode = "", url = "") {
 			}
 		});
 
-		var out = fs.createWriteStream(path.join(rootpath, `dl`, `online-apk-${currentMonth}-${currentDay}-${currentYear}.apk`));
+		var out = fs.createWriteStream(apkdlpath);
 		req.pipe(out);
 
 		req.on('response', function(data) {
@@ -427,53 +428,14 @@ async function installAPK(mode = "", url = "") {
 
 		req.on('end', function() {
 			out.end();
-			console.log("Successfully downloaded SCRCPY!");
+			console.log("Successfully downloaded APK!");
 			progressText.innerHTML = 'Download Complete!';
-			document.getElementById("DLMODAL-title").innerHTML = "Downloaded SCRCPY";
-			setTimeout(async function() {
-				progressText.innerHTML = 'Extracting SCRCPY...';
-				const extract = onezip.extract(path.join(rootpath, `adb-tools-platform-${os.platform()}.zip`), path.join(rootpath, 'lib'));
-
-				extract.on('file', (name) => {
-					if (debug == true) {
-						console.log(name);
-					};
-				});
-
-				extract.on('start', (percent) => {
-					console.log('extracting started');
-					document.getElementById("DLMODAL-title").innerHTML = "Extracting SCRCPY";
-				});
-
-				extract.on('progress', (percent) => {
-					console.log(percent + '%');
-					progbar.style = `width: ${percent}%;`;
-					downloadProgressText.innerHTML = `${percent}%`;
-					progbar.innerHTML = `${percent}%`;
-				});
-
-				extract.on('error', (error) => {
-					console.error(error);
-					//Create error log and inform user an error occured
-					let data = JSON.stringify({
-						"Ereason": `${error}`,
-						"Date": `${currentMonth}/${currentDay}/${currentYear}`,
-						"Platform": `${os.platform()}`,
-						"section": `SCRCPY`
-					});
-					fs.writeFileSync(path.join(rootpath, 'SCRCPY-Extract-Error.json'), data);
-				});
-
-				extract.on('end', () => {
-					console.log('done extrating');
-					document.getElementById("DLMODAL-title").innerHTML = "Extracted SCRCPY";
-					progressText.innerHTML = 'Extracted SCRCPY!';
-				});
-			}, 3000);
+			document.getElementById("DLMODAL-title").innerHTML = "Downloaded APK";
 		});
 		$('#DLGMODAL').modal('hide');
+		apkpath = apkdlpath;
 
-		fs.unlink(path.join(rootpath, `adb-tools-platform-${os.platform()}.zip`), (err) => {
+		/*fs.unlink(path.join(rootpath, `adb-tools-platform-${os.platform()}.zip`), (err) => {
 			progbar.style.display = "none";
 			if (err) {
 				//Create error log and inform user an error occured
@@ -486,9 +448,7 @@ async function installAPK(mode = "", url = "") {
 				fs.writeFileSync(path.join(rootpath, 'ADB-Tools-unlink-Error.json'), data);
 			};
 			console.log(`adb-tools-platform-${os.platform()}.zip was deleted`);
-			var dvcloop;
-			dvcloop = setInterval(dispinfo, 1000);
-		});
+		});*/
 	} else {
 		localapk = await dialog.showOpenDialog({
 			properties: ['openFile'],
@@ -529,8 +489,8 @@ async function installAPK(mode = "", url = "") {
 	$('#DLGMODAL').modal('show');
 
 	acceptbtn.addEventListener("click", async function eventHandler() {
-		document.getElementById("DLMODAL-title").innerHTML = "Installing APK";
-		progressText.innerHTML = `Installing ${apkpath}`;
+		document.getElementById("DLMODAL-title").innerHTML = "Enrolling device";
+		progressText.innerHTML = `Enrolling device in MDM`;
 		denybtn.style.display = "none";
 		acceptbtn.style.display = "none";
 		setTimeout(async function() {
@@ -539,7 +499,7 @@ async function installAPK(mode = "", url = "") {
 				console.log(resp);
 				if (resp == "Performing Streamed Install\r\nSuccess\r\n") {
 					document.getElementById("DLMODAL-title").innerHTML = "Installed APK";
-					progressText.innerHTML = `Successfully Installed ${localapk.filePaths[0]}`;
+					progressText.innerHTML = `Successfully Installed ${apkpath}`;
 					setTimeout(async function() {
 						$('#DLGMODAL').modal('hide');
 					}, 2000);
@@ -553,7 +513,7 @@ async function installAPK(mode = "", url = "") {
 				}
 			} catch (e) {
 				document.getElementById("DLMODAL-title").innerHTML = "Error durring install";
-				fs.writeFileSync(path.join(rootpath, "AOKINSTALLERROR.log"), e.toString());
+				fs.writeFileSync(path.join(rootpath, "APKINSTALLERROR.log"), e.toString());
 				progressText.innerHTML = `An error accured while install your APK,<br>a log has been saved at ${path.join(rootpath, 'APKINSTALLERROR.log')}`;
 				setTimeout(async function() {
 					$('#DLGMODAL').modal('hide');
@@ -569,7 +529,48 @@ async function installAPK(mode = "", url = "") {
 }
 
 function EnrollMDM() {
+	var progressText = document.getElementById("progress-text");
+	var denybtn = document.getElementById("DenyDLGModalBtn");
+	var acceptbtn = document.getElementById("AcceptDLGModalBtn");
 
+	document.getElementById("DLMODAL-title").innerHTML = "Enroll device in MDM";
+	progressText.style.display = "block";
+	denybtn.style.display = "block";
+	acceptbtn.style.display = "block";
+	progressText.innerHTML = "Are you sure you want to enroll this device in MDM?<br>This will install the Miradore client to this device.";
+
+	acceptbtn.innerHTML = '<i class="fa fa-download"></i> Yes, Install';
+
+	$("#DLGMODAL").modal({
+		backdrop: 'static',
+		keyboard: false
+	});
+	$('#DLGMODAL').modal('show');
+
+	acceptbtn.addEventListener("click", async function eventHandler() {
+		document.getElementById("DLMODAL-title").innerHTML = "Installing APK";
+		progressText.innerHTML = `Installing ${apkpath}`;
+		denybtn.style.display = "none";
+		acceptbtn.style.display = "none";
+		setTimeout(async function() {
+			try {
+				var resp = await installAPK("online", "https://online.miradore.com/mdonline.apk");
+				console.log(resp);
+			} catch (e) {
+				document.getElementById("DLMODAL-title").innerHTML = "Error durring install";
+				fs.writeFileSync(path.join(rootpath, "MDMINSTALLERROR.log"), e.toString());
+				progressText.innerHTML = `An error accured while enrolling your device in MDM,<br>a log has been saved at ${path.join(rootpath, 'MDMINSTALLERROR.log')}`;
+				setTimeout(async function() {
+					$('#DLGMODAL').modal('hide');
+				}, 5000);
+			};
+			this.removeEventListener('click', eventHandler);
+		}, 2000);
+	});
+	denybtn.addEventListener("click", async function eventHandler() {
+		$('#DLGMODAL').modal('hide');
+		this.removeEventListener('click', eventHandler);
+	});
 }
 
 function dispinfo() {
