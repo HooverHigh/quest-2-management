@@ -534,7 +534,7 @@ function EnrollMDM() {
 
 	acceptbtn.addEventListener("click", async function eventHandler() {
 		document.getElementById("DLMODAL-title").innerHTML = "Installing APK";
-		progressText.innerHTML = `Installing ${apkpath}`;
+		progressText.innerHTML = `Installing miradore client`;
 		denybtn.style.display = "none";
 		acceptbtn.style.display = "none";
 		setTimeout(async function() {
