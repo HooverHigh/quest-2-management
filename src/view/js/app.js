@@ -114,7 +114,7 @@ if (DiscordRPC == true) {
 	};
 };
 
-var dluseragent = `Q2M v:${launcherversion}; platform:${os.platform()};`;
+var dluseragent = `Q2M v:${LauncherVersion}; platform:${os.platform()};`;
 
 function DownloadLIBS() {
 	const url = 'https://dl.google.com/android/repository/platform-tools-latest-';
