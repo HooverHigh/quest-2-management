@@ -117,6 +117,16 @@ if (DiscordRPC == true) {
 var dluseragent = `Q2M v:${LauncherVersion}; platform:${os.platform()};`;
 
 function DownloadLIBS() {
+	var progressText = document.getElementById("progress-text");
+	var downloadProgressText = document.getElementById("download-progress-text");
+	var progbar = document.getElementById("progbar");
+	
+	$("#DLGMODAL").modal({
+		backdrop: 'static',
+		keyboard: false
+	});
+	$('#DLGMODAL').modal('show');
+	
 	const url = 'https://dl.google.com/android/repository/platform-tools-latest-';
 	console.log(`Platform: ${os.platform()}`);
 	let downloadUrl;
@@ -126,20 +136,21 @@ function DownloadLIBS() {
 			break;
 
 		default:
-			downloadUrl = `${url}${os.platform()}.zip`;
+		    if (os.platform() == "linux") {
+				if (os.arch() == "arm") {
+					document.getElementById("DLMODAL-title").innerHTML = "Unable to install ADB";
+					progressText.innerHTML = `Please run "apt install adb"<br>Your detected arch is ${os.arch()} which is not supported for auto install.`;
+					setTimeout(function() {
+						$('#DLGMODAL').modal('hide');
+					}, 3000);
+					return;
+				}
+			} else {
+				downloadUrl = `${url}${os.platform()}.zip`;
+			}
 			break;
 	}
 	console.log(`DL Url: ${downloadUrl}`);
-
-	$("#DLGMODAL").modal({
-		backdrop: 'static',
-		keyboard: false
-	});
-	$('#DLGMODAL').modal('show');
-
-	var progressText = document.getElementById("progress-text");
-	var downloadProgressText = document.getElementById("download-progress-text");
-	var progbar = document.getElementById("progbar");
 
 	document.getElementById("DLMODAL-title").innerHTML = "Downloading ADB Tools...";
 	progressText.innerHTML = "Downloading ADB Tools..."
@@ -365,13 +376,12 @@ function streamScreen(eye) {
 	Q2MADB.showScreen(eye);
 }
 
-async function installAPK(mode = "", url = "") {
+async function installAPK(mode="", url="") {
 	var localapk, apkpath, apkurl, apkdlpath;
 	var progressText = document.getElementById("progress-text");
 	var denybtn = document.getElementById("DenyDLGModalBtn");
 	var acceptbtn = document.getElementById("AcceptDLGModalBtn");
-	console.log(typeof mode, typeof url);
-	if (typeof mode != "" || typeof mode != "null" && mode == "online" && typeof url != "") {
+	if (mode == "online") {
 		apkurl = url;
 		console.log(`Platform: ${os.platform()}`);
 		console.log(`DL Url: ${apkurl}`);
@@ -627,7 +637,7 @@ function dispinfo() {
 	document.getElementById("viewscrnbtn").addEventListener("click", streamScreen);
 	document.getElementById("installapkbtn").removeEventListener("click", installAPK);
 	document.getElementById("installapkbtn").addEventListener("click", installAPK);
-  document.getElementById("enrollmdmbtn").removeEventListener("click", EnrollMDM);
+	document.getElementById("enrollmdmbtn").removeEventListener("click", EnrollMDM);
 	document.getElementById("enrollmdmbtn").addEventListener("click", EnrollMDM);
 };
 
@@ -640,7 +650,7 @@ $(document).ready(function() {
 
 	/* Check if ADB tools is installed, otherwise download */
 	try {
-		if (fs.existsSync(path.join(rootpath, 'lib', 'platform-tools', 'adb.exe'))) {
+		if (fs.existsSync(path.join(rootpath, 'lib', 'platform-tools', 'adb.exe')) || fs.existsSync(path.join('/usr', 'bin', 'adb'))) {
 			console.log("ADB tools installed, checking for connected device");
 			var dvcloop;
 			dvcloop = setInterval(dispinfo, 1000);

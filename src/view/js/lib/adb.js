@@ -9,15 +9,22 @@ function lines(text) {
 };
 /* Set ADB and SCRCPY Path */
 var adbexec = 'adb';
-if (os.platform() === 'win32') {
-    adbexec = 'adb.exe';
-};
 var scrcpyexec = 'scrcpy';
 if (os.platform() === 'win32') {
+    adbexec = 'adb.exe';
     scrcpyexec = 'scrcpy.exe';
 };
-const adbexecutable = path.join(rootpath, 'lib', 'platform-tools', adbexec);
-const srccpyexecutable = path.join(rootpath, 'lib', 'scrcpy', scrcpyexec);
+var adbexecutable = path.join(rootpath, 'lib', 'platform-tools', adbexec);
+var srccpyexecutable = path.join(rootpath, 'lib', 'scrcpy', scrcpyexec);
+switch(os.platform()) {
+    case "linux":
+        if (os.arch() == "arm") {
+            adbexecutable = path.join('/usr', 'bin', adbexec);
+        }
+        break;
+    default:
+        break;
+}
 if (debug == true) {
     console.log(adbexecutable);
     console.log(srccpyexecutable);
