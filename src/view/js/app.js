@@ -626,6 +626,8 @@ function dispinfo() {
 	document.getElementById("viewscrnbtn").addEventListener("click", streamScreen);
 	document.getElementById("installapkbtn").removeEventListener("click", installAPK);
 	document.getElementById("installapkbtn").addEventListener("click", installAPK);
+  document.getElementById("enrollmdmbtn").removeEventListener("click", EnrollMDM);
+	document.getElementById("enrollmdmbtn").addEventListener("click", EnrollMDM);
 };
 
 $(document).ready(function() {
