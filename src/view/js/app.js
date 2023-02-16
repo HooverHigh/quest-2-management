@@ -367,6 +367,9 @@ function streamScreen(eye) {
 
 async function installAPK(mode = "", url = "") {
 	var localapk, apkpath, apkurl, apkdlpath;
+	var progressText = document.getElementById("progress-text");
+	var denybtn = document.getElementById("DenyDLGModalBtn");
+	var acceptbtn = document.getElementById("AcceptDLGModalBtn");
 	if (typeof mode != "" || typeof mode != "null" && mode == "online" && typeof url != "") {
 		apkurl = url;
 		console.log(`Platform: ${os.platform()}`);
@@ -455,9 +458,6 @@ async function installAPK(mode = "", url = "") {
 			return;
 		};
 	}
-	var progressText = document.getElementById("progress-text");
-	var denybtn = document.getElementById("DenyDLGModalBtn");
-	var acceptbtn = document.getElementById("AcceptDLGModalBtn");
 
 	document.getElementById("DLMODAL-title").innerHTML = "Install APK";
 	progressText.style.display = "block";
