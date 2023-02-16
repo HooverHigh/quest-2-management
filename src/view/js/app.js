@@ -370,6 +370,7 @@ async function installAPK(mode = "", url = "") {
 	var progressText = document.getElementById("progress-text");
 	var denybtn = document.getElementById("DenyDLGModalBtn");
 	var acceptbtn = document.getElementById("AcceptDLGModalBtn");
+	console.log(typeof mode, typeof url);
 	if (typeof mode != "" || typeof mode != "null" && mode == "online" && typeof url != "") {
 		apkurl = url;
 		console.log(`Platform: ${os.platform()}`);
